@@ -36,8 +36,26 @@ extends Node3D
 @export_group("Terrain")
 @export var terrain_size: float = 160.0
 @export var height_scale: float = 5.5
-@export var noise_frequency: float = 0.018
-@export var terrain_seed: int = 1337
+@export var terrain_seed: int = 777
+
+## --- "Hand-sculpted look" tuning ---
+## These four values are the whole trick. Plain noise looks like
+## noise -- regular bumps on an invisible grid. Real, hand-sculpted
+## terrain doesn't: ridgelines bend, valleys wander, nothing lines
+## up. We fake that with two techniques (both explained in detail
+## right above get_height() below): DOMAIN WARPING (warp_frequency /
+## warp_strength) bends the coordinates before we sample height, and
+## RIDGED NOISE (ridge_frequency / ridge_strength / ridge_threshold)
+## folds the noise into sharp creases on higher ground, like real
+## mountain ridges rising out of smooth valleys.
+@export var macro_frequency: float = 0.006     ## the big hills/valleys shape
+@export var detail_frequency: float = 0.05     ## small surface bumps, underfoot roughness
+@export var detail_strength: float = 0.35      ## how much those small bumps matter vs the big shape
+@export var warp_frequency: float = 0.01
+@export var warp_strength: float = 18.0        ## bigger = more bending/curving, 0 = off
+@export var ridge_frequency: float = 0.02
+@export var ridge_strength: float = 0.6        ## how strongly ridges override smooth hills, 0 = off
+@export var ridge_threshold: float = 0.15      ## how high ground must be before ridges kick in
 
 @export_group("Flatten (matches the indoor room's footprint)")
 @export var flat_center: Vector2 = Vector2(0.0, -7.0)
@@ -73,14 +91,39 @@ extends Node3D
 @export var use_hand_placed_terrain: bool = true
 
 var _terrain: Terrain3D = null
-var _noise := FastNoiseLite.new()
+
+## Five separate noise fields, each with ONE job (see get_height()
+## below for how they combine). Using different seeds (terrain_seed
+## + 1, +2, etc.) for each means they're all different-looking noise
+## patterns even though they're all driven by the single
+## terrain_seed value -- so changing terrain_seed still regenerates
+## the *entire* landscape as one consistent, reproducible package.
+var _macro_noise := FastNoiseLite.new()    ## the big hills and valleys
+var _detail_noise := FastNoiseLite.new()   ## small surface bumps
+var _warp_noise_x := FastNoiseLite.new()   ## domain warp, x-direction nudge
+var _warp_noise_z := FastNoiseLite.new()   ## domain warp, z-direction nudge
+var _ridge_noise := FastNoiseLite.new()    ## folded noise for mountain ridges
 var _rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
-	_noise.seed = terrain_seed
-	_noise.frequency = noise_frequency
-	_noise.fractal_octaves = 4
+	_macro_noise.seed = terrain_seed
+	_macro_noise.frequency = macro_frequency
+	_macro_noise.fractal_octaves = 3
+
+	_detail_noise.seed = terrain_seed + 1
+	_detail_noise.frequency = detail_frequency
+	_detail_noise.fractal_octaves = 3
+
+	_warp_noise_x.seed = terrain_seed + 2
+	_warp_noise_x.frequency = warp_frequency
+	_warp_noise_z.seed = terrain_seed + 3
+	_warp_noise_z.frequency = warp_frequency
+
+	_ridge_noise.seed = terrain_seed + 4
+	_ridge_noise.frequency = ridge_frequency
+	_ridge_noise.fractal_octaves = 4
+
 	_rng.seed = scatter_seed
 
 	if use_hand_placed_terrain:
@@ -116,8 +159,50 @@ func get_height(x: float, z: float) -> float:
 	if _terrain != null:
 		return _terrain.data.get_height(Vector3(x, 0.0, z))
 
-	var n: float = _noise.get_noise_2d(x, z)  # -1..1
-	var rolling: float = flat_height + n * height_scale
+	# ---- STEP 1: Domain warp --------------------------------------
+	# Before we even ask "how tall is the ground at (x, z)?", we
+	# sneakily change what (x, z) means. Two low-frequency noise
+	# fields (_warp_noise_x/_warp_noise_z) tell us "shift this point
+	# a bit this way, a bit that way" -- a different, smoothly-
+	# varying shift at every location. Sample the SAME macro noise
+	# at this wobbled position instead of the real one, and straight
+	# lines/grids in the noise pattern turn into curves and bends,
+	# the same way a river bends instead of running dead straight.
+	# This is the single biggest reason hand-painted terrain looks
+	# "designed" and raw noise looks "generated."
+	var warp_x: float = _warp_noise_x.get_noise_2d(x, z) * warp_strength
+	var warp_z: float = _warp_noise_z.get_noise_2d(x, z) * warp_strength
+	var wx: float = x + warp_x
+	var wz: float = z + warp_z
+
+	# ---- STEP 2: Macro shape (the big hills and valleys) ----------
+	var macro: float = _macro_noise.get_noise_2d(wx, wz)  # -1..1
+
+	# ---- STEP 3: Ridged noise (mountain-y ridgelines) --------------
+	# Ordinary noise gives smooth rolling bumps everywhere -- fine
+	# for gentle hills, but real high ground usually has sharper
+	# creases and ridgelines. Trick: take the absolute value of a
+	# noise field (folding negative bumps up to positive, like
+	# creasing a piece of paper in half) and flip it, so what used to
+	# be smooth peaks and valleys becomes sharp ridges and grooves.
+	# smoothstep() below only blends this in once the macro terrain
+	# is already above ridge_threshold, so low valley floors stay
+	# smooth and only the higher hills sprout craggy ridges -- just
+	# like a real mountain range rising out of a flat valley.
+	var ridge_raw: float = 1.0 - abs(_ridge_noise.get_noise_2d(wx, wz))  # 0..1, creased
+	var ridged_signed: float = ridge_raw * 2.0 - 1.0                    # back to -1..1
+	var ridge_amount: float = smoothstep(ridge_threshold, ridge_threshold + 0.3, macro)
+	var shaped: float = lerp(macro, ridged_signed, ridge_amount * ridge_strength)
+
+	# ---- STEP 4: Fine detail (small bumps underfoot) ---------------
+	# Sampled WITHOUT the warp and at a much higher frequency than
+	# the macro shape -- this is just texture, small enough that it
+	# adds roughness without fighting the big hills/valleys/ridges
+	# already decided above.
+	var detail: float = _detail_noise.get_noise_2d(x, z)
+	var combined: float = shaped + detail * detail_strength
+
+	var rolling: float = flat_height + combined * height_scale
 
 	# Blend down to dead-flat inside the room's footprint rectangle.
 	var rect_d: float = _rounded_rect_sdf(Vector2(x, z), flat_center, flat_half)
