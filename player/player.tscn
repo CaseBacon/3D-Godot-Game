@@ -1,0 +1,44 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://player/player.gd" id="1_script"]
+
+; Collision shape -- invisible, this is what the physics engine actually
+; uses to detect walls/floor/crates. It never gets a material/color.
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 0.4
+height = 1.8
+
+; Visible shape -- same size as the collision shape above, but this is
+; what actually gets drawn on screen.
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
+radius = 0.4
+height = 1.8
+
+; A "material" tells a mesh what color/shininess/etc. to render with.
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_player"]
+albedo_color = Color(0.85, 0.85, 0.9, 1)
+roughness = 0.6
+
+[node name="Player" type="CharacterBody3D"]
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("CapsuleMesh_1")
+surface_material_override/0 = SubResource("StandardMaterial3D_player")
+
+[node name="Head" type="Node3D" parent="."]
+position = Vector3(0, 0.6, 0)
+
+[node name="Camera3D" type="Camera3D" parent="Head"]
+current = true
+fov = 75.0
+
+; RayCast3D is the player's "interaction sensor" -- a straight invisible
+; line pointing wherever the camera looks, out to 3 meters
+; (target_position is in the ray's OWN local space, and the camera looks
+; down its local -Z axis by default, hence the negative Z).
+[node name="InteractRay" type="RayCast3D" parent="Head/Camera3D"]
+target_position = Vector3(0, 0, -3)

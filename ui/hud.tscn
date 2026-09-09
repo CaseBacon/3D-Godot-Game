@@ -1,0 +1,168 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/hud.gd" id="1_script"]
+
+; CanvasLayer draws its children on top of the 3D scene, in flat 2D
+; screen space -- perfect for UI like a crosshair or a health bar,
+; which should stay fixed on screen no matter where the camera looks.
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_script")
+
+; A simple "+" text label pinned to the exact center of the screen.
+[node name="Crosshair" type="Label" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -10.0
+offset_top = -12.0
+offset_right = 10.0
+offset_bottom = 12.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "+"
+
+; Hidden by default (hud.gd hides it in _ready). Shown just below the
+; crosshair whenever the player is looking at something interactable.
+[node name="PromptLabel" type="Label" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = 40.0
+offset_right = 150.0
+offset_bottom = 70.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+text = "Press E to interact"
+
+; Hidden by default (hud.gd hides it in _ready). Pinned near the top
+; of the screen so it doesn't overlap the crosshair/prompt in the
+; middle. Briefly shown whenever Inventory fires item_added.
+[node name="PickupLabel" type="Label" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.0
+anchor_right = 0.5
+anchor_bottom = 0.0
+offset_left = -150.0
+offset_top = 40.0
+offset_right = 150.0
+offset_bottom = 70.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+text = "Picked up: Item"
+
+; Always visible (unlike PromptLabel/PickupLabel, which are hidden
+; until something triggers them) -- a permanent reminder in the
+; corner of what the player is currently meant to be doing. Updated
+; by hud.gd whenever GameManager.objective_changed fires.
+[node name="ObjectiveLabel" type="Label" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 20.0
+offset_right = 300.0
+offset_bottom = 50.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 1, 1, 0.85)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+horizontal_alignment = 0
+text = "Objective: Explore the house."
+
+; --- Code entry panel ---
+; Hidden until a CombinationLock calls open_code_entry (see hud.gd).
+; A plain Panel gives us a background box; the three Labels inside it
+; are content, not separate popups. All the actual digit typing is
+; handled in code (hud.gd's _unhandled_input) rather than with
+; LineEdit/Button nodes -- simpler to read for a first UI panel, at
+; the cost of not being mouse-clickable.
+[node name="CodePanel" type="Panel" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -70.0
+offset_right = 160.0
+offset_bottom = 70.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Instructions" type="Label" parent="CodePanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 310.0
+offset_bottom = 34.0
+horizontal_alignment = 1
+text = "Enter code (Enter to submit, Esc to cancel)"
+
+[node name="CodeDisplay" type="Label" parent="CodePanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 50.0
+offset_right = 310.0
+offset_bottom = 90.0
+theme_override_font_sizes/font_size = 32
+horizontal_alignment = 1
+
+[node name="CodeFeedback" type="Label" parent="CodePanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 100.0
+offset_right = 310.0
+offset_bottom = 130.0
+theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+horizontal_alignment = 1
+
+; --- Readable note panel ---
+; Hidden until a Note calls show_note (see hud.gd/note.gd). Bigger
+; than the code panel since notes can hold a paragraph or two;
+; autowrap_mode lets long text wrap inside the fixed width instead of
+; running off the panel.
+[node name="NotePanel" type="Panel" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -130.0
+offset_right = 220.0
+offset_bottom = 130.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="NoteText" type="Label" parent="NotePanel"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 420.0
+offset_bottom = 220.0
+autowrap_mode = 3
+text = "Note text goes here."
+
+[node name="NoteHint" type="Label" parent="NotePanel"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 230.0
+offset_right = 420.0
+offset_bottom = 254.0
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1, 1, 1, 0.6)
+horizontal_alignment = 1
+text = "Press any key to close"

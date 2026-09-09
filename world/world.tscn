@@ -1,0 +1,472 @@
+[gd_scene format=3 uid="uid://c3psjtq8fpij8"]
+
+[ext_resource type="Shader" uid="uid://cvd0x7lon1ur6" path="res://addons/sky_3d/shaders/SkyMaterial.gdshader" id="1_m0cxt"]
+[ext_resource type="PackedScene" uid="uid://biyq17weybyoe" path="res://player/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" uid="uid://6qgtyjy3vfoc" path="res://models/avocado/Avocado.glb" id="2_avocado"]
+[ext_resource type="Texture2D" uid="uid://cfqk60lpl5ljv" path="res://addons/sky_3d/assets/resources/SNoise.tres" id="2_j34ew"]
+[ext_resource type="PackedScene" path="res://ui/hud.tscn" id="3_hud"]
+[ext_resource type="Texture2D" uid="uid://cecwdqjol0ckd" path="res://addons/sky_3d/assets/textures/noiseClouds.png" id="3_p2iis"]
+[ext_resource type="Texture2D" uid="uid://2r8ylu6rg5dp" path="res://addons/sky_3d/assets/thirdparty/textures/moon/MoonMap.png" id="4_aysyn"]
+[ext_resource type="Script" uid="uid://df4dubm8n3dr0" path="res://interactables/interactable.gd" id="4_interactable"]
+[ext_resource type="Script" uid="uid://bdnwx5bn08f1j" path="res://interactables/locked_door.gd" id="5_locked_door"]
+[ext_resource type="Texture2D" uid="uid://djpfuyxkryegn" path="res://addons/sky_3d/assets/textures/noise.jpg" id="5_o1net"]
+[ext_resource type="Texture2D" uid="uid://bm7dot7t7u1q4" path="res://addons/sky_3d/assets/thirdparty/textures/milkyway/StarField.jpg" id="6_3ljsx"]
+[ext_resource type="Script" uid="uid://bufjad2k2f50f" path="res://interactables/combination_lock.gd" id="6_combination_lock"]
+[ext_resource type="Texture2D" uid="uid://c1vwcdcdvb74a" path="res://addons/sky_3d/assets/thirdparty/textures/milkyway/Milkyway.jpg" id="7_gi7ib"]
+[ext_resource type="Script" uid="uid://cy43cw7j4b2vw" path="res://interactables/note.gd" id="7_note"]
+[ext_resource type="Script" uid="uid://dbf6fset4pjkv" path="res://world/world_generator.gd" id="8_world_generator"]
+[ext_resource type="Script" uid="uid://b4tkplvh7fq40" path="res://addons/sky_3d/src/SkyDome.gd" id="9_0pnie"]
+[ext_resource type="Script" uid="uid://deo0gxkmk2ahd" path="res://addons/sky_3d/src/Sky3D.gd" id="9_sky3d"]
+[ext_resource type="Script" uid="uid://cjmkcj8hwm7ts" path="res://addons/sky_3d/src/TimeOfDay.gd" id="10_llyeo"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_2tavo"]
+shader = ExtResource("1_m0cxt")
+shader_parameter/sky_visible = true
+shader_parameter/color_correction = Vector2(0, 1)
+shader_parameter/ground_color = Color(0.3, 0.3, 0.3, 1)
+shader_parameter/horizon_offset = 0.0
+shader_parameter/atm_darkness = 0.5
+shader_parameter/atm_sun_intensity = 18.0
+shader_parameter/atm_day_tint = Color(0.807843, 0.909804, 1, 1)
+shader_parameter/atm_horizon_light_tint = Color(0.980392, 0.635294, 0.462745, 1)
+shader_parameter/atm_night_tint = Color(0, 0, 0, 0)
+shader_parameter/atm_level_params = Vector3(1, 0, 0)
+shader_parameter/atm_thickness = 0.7
+shader_parameter/atm_beta_ray = Vector3(5.804544e-06, 1.3562913e-05, 3.311258e-05)
+shader_parameter/atm_beta_mie = Vector3(3.038e-08, 3.038e-08, 3.038e-08)
+shader_parameter/sun_light_color = Color(1, 1, 1, 1)
+shader_parameter/sun_disk_color = Color(0.996094, 0.541334, 0.140076, 1)
+shader_parameter/sun_disk_intensity = 30.0
+shader_parameter/sun_disk_size = 0.02
+shader_parameter/atm_sun_mie_tint = Color(1, 1, 1, 1)
+shader_parameter/atm_sun_mie_intensity = 1.0
+shader_parameter/atm_sun_partial_mie_phase = Vector3(0.36, 1.64, 1.6)
+shader_parameter/moon_color = Color(1, 1, 1, 1)
+shader_parameter/moon_texture = ExtResource("4_aysyn")
+shader_parameter/moon_texture_alignment = Vector3(7, 1.4, 4.8)
+shader_parameter/moon_texture_flip_u = false
+shader_parameter/moon_texture_flip_v = false
+shader_parameter/moon_size = 0.07
+shader_parameter/atm_moon_mie_tint = Color(0.137255, 0.184314, 0.292196, 1)
+shader_parameter/atm_moon_mie_intensity = 0.0
+shader_parameter/atm_moon_partial_mie_phase = Vector3(0.36, 1.64, 1.6)
+shader_parameter/starmap_color = Color(0.709804, 0.709804, 0.709804, 0.854902)
+shader_parameter/starmap_texture = ExtResource("7_gi7ib")
+shader_parameter/starmap_flip_u = false
+shader_parameter/starmap_flip_v = false
+shader_parameter/starmap_alignment = Vector3(2.68288, -0.25891, 0.40101)
+shader_parameter/star_rotation_offset = 9.38899
+shader_parameter/star_rotation = -11.057122123168474
+shader_parameter/star_tilt = -1.2915436464758039
+shader_parameter/star_field_color = Color(1, 1, 1, 1)
+shader_parameter/star_field_texture = ExtResource("6_3ljsx")
+shader_parameter/star_scintillation = 0.75
+shader_parameter/star_scintillation_speed = 0.01
+shader_parameter/noise_tex = ExtResource("5_o1net")
+shader_parameter/clouds_night_color = Color(0.090196, 0.094118, 0.129412, 1)
+shader_parameter/cirrus_visible = true
+shader_parameter/cirrus_intensity = 2.0
+shader_parameter/cirrus_coverage = 0.5
+shader_parameter/cirrus_thickness = 1.7
+shader_parameter/cirrus_absorption = 2.0
+shader_parameter/cirrus_sky_tint_fade = 0.5
+shader_parameter/cirrus_size = 1.0
+shader_parameter/cirrus_uv = Vector2(0.16, 0.11)
+shader_parameter/cirrus_position1 = Vector2(0.26442394, 0.26442394)
+shader_parameter/cirrus_position2 = Vector2(0.26442394, 0.26442394)
+shader_parameter/cirrus_texture = ExtResource("2_j34ew")
+shader_parameter/cumulus_visible = true
+shader_parameter/cumulus_intensity = 0.6
+shader_parameter/cumulus_coverage = 0.55
+shader_parameter/cumulus_thickness = 0.0243
+shader_parameter/cumulus_absorption = 2.0
+shader_parameter/cumulus_noise_freq = 2.7
+shader_parameter/cumulus_sky_tint_fade = 0.0
+shader_parameter/cumulus_size = 0.5
+shader_parameter/cumulus_position = Vector2(26.393972, 26.393972)
+shader_parameter/cumulus_texture = ExtResource("3_p2iis")
+shader_parameter/cumulus_partial_mie_phase = Vector3(0.957564, 1.042436, 0.412)
+shader_parameter/cumulus_mie_intensity = 1.0
+shader_parameter/show_azimuthal_grid = false
+shader_parameter/azimuthal_grid_color = Color(0.87058824, 0.72156864, 0.5294118, 1)
+shader_parameter/azimuthal_grid_rotation_offset = 0.03
+shader_parameter/show_equatorial_grid = false
+shader_parameter/equatorial_grid_color = Color(0, 0.75, 1, 1)
+shader_parameter/equatorial_grid_rotation_offset = 0.03
+shader_parameter/moon_matrix = Basis(0.14256558, -0.95144266, -0.2728218, 0.046063967, 0.2817166, -0.95839125, 0.98871285, 0.124066345, 0.08399031)
+
+[sub_resource type="Sky" id="Sky_k8wd0"]
+sky_material = SubResource("ShaderMaterial_2tavo")
+
+[sub_resource type="Environment" id="Environment_j7vgi"]
+background_mode = 2
+sky = SubResource("Sky_k8wd0")
+ambient_light_source = 3
+ambient_light_color = Color(1, 1, 1, 1)
+reflected_light_source = 2
+tonemap_mode = 3
+tonemap_white = 6.0
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_inp7a"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_avocado"]
+size = Vector3(0.6, 0.5, 0.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_crate"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_crate"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_crate"]
+albedo_color = Color(0.55, 0.36, 0.18, 1)
+roughness = 0.7
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_key"]
+size = Vector3(0.4, 0.15, 0.15)
+
+[sub_resource type="BoxMesh" id="BoxMesh_key"]
+size = Vector3(0.4, 0.15, 0.15)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_key"]
+albedo_color = Color(0.85, 0.65, 0.13, 1)
+metallic = 0.8
+roughness = 0.3
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_note"]
+size = Vector3(0.5, 0.35, 0.05)
+
+[sub_resource type="BoxMesh" id="BoxMesh_note"]
+size = Vector3(0.5, 0.35, 0.05)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_note"]
+albedo_color = Color(0.93, 0.89, 0.75, 1)
+roughness = 0.9
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_long"]
+size = Vector3(8, 3, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_long"]
+size = Vector3(8, 3, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
+albedo_color = Color(0.62, 0.6, 0.58, 1)
+roughness = 0.85
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_short"]
+size = Vector3(3, 3, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_short"]
+size = Vector3(3, 3, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_side"]
+size = Vector3(0.5, 3, 8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_side"]
+size = Vector3(0.5, 3, 8)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_orb"]
+radius = 0.3
+
+[sub_resource type="SphereMesh" id="SphereMesh_orb"]
+radius = 0.3
+height = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_orb"]
+albedo_color = Color(1, 0.8, 0.1, 1)
+metallic = 0.6
+roughness = 0.2
+emission_enabled = true
+emission = Color(1, 0.8, 0.1, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_panel"]
+size = Vector3(0.8, 0.6, 0.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_panel"]
+size = Vector3(0.8, 0.6, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_panel"]
+albedo_color = Color(0.2, 0.2, 0.22, 1)
+metallic = 0.4
+roughness = 0.5
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_chest"]
+size = Vector3(0.8, 0.6, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_chest"]
+size = Vector3(0.8, 0.6, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_chest"]
+albedo_color = Color(0.4, 0.25, 0.1, 1)
+roughness = 0.7
+
+[sub_resource type="Gradient" id="Gradient_bwxdu"]
+offsets = PackedFloat32Array(0.2, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_lwhbe"]
+noise_type = 2
+frequency = 0.03
+cellular_jitter = 3.0
+cellular_return_type = 0
+domain_warp_enabled = true
+domain_warp_type = 1
+domain_warp_amplitude = 50.0
+domain_warp_fractal_type = 2
+domain_warp_fractal_lacunarity = 1.5
+domain_warp_fractal_gain = 1.0
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_ftqqi"]
+noise = SubResource("FastNoiseLite_lwhbe")
+color_ramp = SubResource("Gradient_bwxdu")
+seamless = true
+
+[sub_resource type="Terrain3DMaterial" id="Terrain3DMaterial_avd5l"]
+_shader_parameters = {
+&"bias_distance": null,
+&"blend_sharpness": null,
+&"depth_blur": null,
+&"enable_macro_variation": null,
+&"enable_projection": null,
+&"flat_terrain_normals": null,
+&"macro_variation1": null,
+&"macro_variation2": null,
+&"macro_variation_slope": null,
+&"mipmap_bias": null,
+&"noise1_angle": null,
+&"noise1_offset": null,
+&"noise1_scale": null,
+&"noise2_scale": null,
+&"noise_texture": SubResource("NoiseTexture2D_ftqqi"),
+&"projection_threshold": null
+}
+show_checkered = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ll3gq"]
+transparency = 4
+cull_mode = 2
+vertex_color_use_as_albedo = true
+backlight_enabled = true
+backlight = Color(0.5, 0.5, 0.5, 1)
+distance_fade_mode = 1
+distance_fade_min_distance = 128.0
+distance_fade_max_distance = 96.0
+
+[sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_jgi7c"]
+generated_type = 1
+height_offset = 0.5
+material_override = SubResource("StandardMaterial3D_ll3gq")
+last_lod = 0
+last_shadow_lod = 0
+lod0_range = 128.0
+
+[sub_resource type="Terrain3DAssets" id="Terrain3DAssets_cqwbg"]
+mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_jgi7c")])
+
+[node name="World" type="Node3D" unique_id=1428401141]
+
+[node name="Sky3D" type="WorldEnvironment" parent="." unique_id=503401082]
+environment = SubResource("Environment_j7vgi")
+camera_attributes = SubResource("CameraAttributesPractical_inp7a")
+script = ExtResource("9_sky3d")
+current_time = 11.01512000000792
+wind_direction = 2.35619451204804
+
+[node name="SunLight" type="DirectionalLight3D" parent="Sky3D" unique_id=1795681612]
+transform = Transform3D(0.94657123, -0.24470402, 0.21005455, 0, 0.6513422, 0.7587841, -0.32249492, -0.71824324, 0.61654174, 0.21005455, 0.7587841, 0.61654174)
+shadow_enabled = true
+
+[node name="MoonLight" type="DirectionalLight3D" parent="Sky3D" unique_id=590448976]
+transform = Transform3D(0, -0.14982268, 0.9887129, 0.56059813, 0.81874126, 0.12406636, -0.828088, 0.5542706, 0.08399032, 0.9887129, 0.12406636, 0.08399032)
+light_color = Color(0.572549, 0.776471, 0.956863, 1)
+light_energy = 0.0
+
+[node name="SkyDome" type="Node" parent="Sky3D" unique_id=601436519]
+script = ExtResource("9_0pnie")
+sun_azimuth = -2.8132286
+sun_altitude = -0.70935196
+moon_azimuth = -1.655542
+moon_altitude = -1.4464095
+wind_direction = 2.35619451204804
+
+[node name="TimeOfDay" type="Node" parent="Sky3D" unique_id=1871123662]
+script = ExtResource("10_llyeo")
+dome_path = NodePath("../SkyDome")
+current_time = 11.01512000000792
+day = 5
+
+[node name="HUD" parent="." unique_id=1511376249 instance=ExtResource("3_hud")]
+
+[node name="WorldGenerator" type="Node3D" parent="." unique_id=337075725]
+script = ExtResource("8_world_generator")
+
+[node name="Crate1" type="StaticBody3D" parent="." unique_id=1781479111]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.6, -3)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Crate1" unique_id=1468262829]
+shape = SubResource("BoxShape3D_avocado")
+
+[node name="Model" parent="Crate1" unique_id=1657840041 instance=ExtResource("2_avocado")]
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 0, 0, 0)
+
+[node name="Crate2" type="StaticBody3D" parent="." unique_id=1565065194]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.5, -5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Crate2" unique_id=218059460]
+shape = SubResource("BoxShape3D_crate")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Crate2" unique_id=253110992]
+mesh = SubResource("BoxMesh_crate")
+surface_material_override/0 = SubResource("StandardMaterial3D_crate")
+
+[node name="BrassKey" type="StaticBody3D" parent="." unique_id=371275752]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.5, -8)
+script = ExtResource("4_interactable")
+prompt_text = "Press E to pick up the brass key"
+is_collectible = true
+item_id = "brass_key"
+item_display_name = "Brass Key"
+objective_on_pickup = "Find the door it opens."
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BrassKey" unique_id=583862257]
+shape = SubResource("BoxShape3D_key")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="BrassKey" unique_id=1087983023]
+mesh = SubResource("BoxMesh_key")
+surface_material_override/0 = SubResource("StandardMaterial3D_key")
+
+[node name="WelcomeSign" type="StaticBody3D" parent="." unique_id=456112798]
+transform = Transform3D(-0.76604444, 0.21984631, -0.6040228, 0, 0.9396926, 0.34202012, 0.64278764, 0.26200262, -0.7198463, 2, 0.9, 3)
+script = ExtResource("7_note")
+prompt_text = "Press E to read the sign"
+note_text = "\"The house holds an old vault. The valley beyond holds an old watchtower.
+Both keep their secrets from anyone who won't come looking.\""
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WelcomeSign" unique_id=1043500198]
+shape = SubResource("BoxShape3D_note")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="WelcomeSign" unique_id=700110375]
+mesh = SubResource("BoxMesh_note")
+surface_material_override/0 = SubResource("StandardMaterial3D_note")
+
+[node name="Room" type="Node3D" parent="." unique_id=550204140]
+
+[node name="WallNorth" type="StaticBody3D" parent="Room" unique_id=1855377944]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -19)
+script = ExtResource("5_locked_door")
+required_item_id = "brass_key"
+required_item_name = "the Brass Key"
+open_prompt = "Press E to open the door"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallNorth" unique_id=365266620]
+shape = SubResource("BoxShape3D_wall_long")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Room/WallNorth" unique_id=1024904145]
+mesh = SubResource("BoxMesh_wall_long")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallSouthLeft" type="StaticBody3D" parent="Room" unique_id=2028184598]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 1.5, -11)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallSouthLeft" unique_id=433512103]
+shape = SubResource("BoxShape3D_wall_short")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Room/WallSouthLeft" unique_id=1841696959]
+mesh = SubResource("BoxMesh_wall_short")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallSouthRight" type="StaticBody3D" parent="Room" unique_id=1152414473]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 1.5, -11)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallSouthRight" unique_id=829207741]
+shape = SubResource("BoxShape3D_wall_short")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Room/WallSouthRight" unique_id=1573445460]
+mesh = SubResource("BoxMesh_wall_short")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallEast" type="StaticBody3D" parent="Room" unique_id=349833875]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1.5, -15)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallEast" unique_id=1078986420]
+shape = SubResource("BoxShape3D_wall_side")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Room/WallEast" unique_id=1425039769]
+mesh = SubResource("BoxMesh_wall_side")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallWest" type="StaticBody3D" parent="Room" unique_id=40328883]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.5, -15)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallWest" unique_id=553710884]
+shape = SubResource("BoxShape3D_wall_side")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Room/WallWest" unique_id=2076348624]
+mesh = SubResource("BoxMesh_wall_side")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="PickupOrb" type="StaticBody3D" parent="Room" unique_id=1971229711]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -15)
+script = ExtResource("4_interactable")
+prompt_text = "Press E to pick up the orb"
+is_collectible = true
+item_id = "glowing_orb"
+item_display_name = "Glowing Orb"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/PickupOrb" unique_id=1790416594]
+shape = SubResource("SphereShape3D_orb")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Room/PickupOrb" unique_id=915530553]
+mesh = SubResource("SphereMesh_orb")
+surface_material_override/0 = SubResource("StandardMaterial3D_orb")
+
+[node name="ClueNote" type="StaticBody3D" parent="Room" unique_id=806946884]
+transform = Transform3D(1, 0, 0, 0, 0.8660254, 0.5, 0, -0.5, 0.8660254, 2, 0.9, -12)
+script = ExtResource("7_note")
+prompt_text = "Press E to read the note"
+note_text = "\"The vault beside the door remembers three numbers: 4, 8, 2.\""
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/ClueNote" unique_id=873184443]
+shape = SubResource("BoxShape3D_note")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Room/ClueNote" unique_id=192291916]
+mesh = SubResource("BoxMesh_note")
+surface_material_override/0 = SubResource("StandardMaterial3D_note")
+
+[node name="VaultLock" type="StaticBody3D" parent="Room" unique_id=1704373310]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 3.7, 1.5, -13)
+script = ExtResource("6_combination_lock")
+unlock_item_id = "vault_key"
+unlock_item_name = "Vault Key"
+objective_on_unlock = "Open the vault chest."
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/VaultLock" unique_id=1143121963]
+shape = SubResource("BoxShape3D_panel")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Room/VaultLock" unique_id=344253077]
+mesh = SubResource("BoxMesh_panel")
+surface_material_override/0 = SubResource("StandardMaterial3D_panel")
+
+[node name="VaultChest" type="StaticBody3D" parent="Room" unique_id=1185674434]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.4, 0.3, -17)
+script = ExtResource("5_locked_door")
+required_item_id = "vault_key"
+required_item_name = "the Vault Key"
+open_prompt = "Press E to open the chest"
+slide_distance = 0.6
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/VaultChest" unique_id=1474888199]
+shape = SubResource("BoxShape3D_chest")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Room/VaultChest" unique_id=1591321620]
+mesh = SubResource("BoxMesh_chest")
+surface_material_override/0 = SubResource("StandardMaterial3D_chest")
+
+[node name="Terrain3D" type="Terrain3D" parent="." unique_id=1078833450]
+material = SubResource("Terrain3DMaterial_avd5l")
+assets = SubResource("Terrain3DAssets_cqwbg")
+show_checkered = true
+top_level = true
+metadata/_edit_lock_ = true
+
+[node name="Player" parent="." unique_id=2068225156 instance=ExtResource("1_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 5)
