@@ -34,13 +34,23 @@ shape = SubResource("CapsuleShape3D_1")
 ; match -- rigs can vary slightly in exact height.
 [node name="Body" parent="." instance=ExtResource("2_body")]
 position = Vector3(0, -0.9, 0)
+rotation_degrees = Vector3(0, 180, 0)
 
 [node name="Head" type="Node3D" parent="."]
-position = Vector3(0, 0.6, 0)
+position = Vector3(0, 0.75, 0)
 
+; cull_mask = 1048573 is "every render layer except layer 2". Layer 2
+; is reserved for the Body model (see player.gd _ready(), which puts
+; every mesh under Body on layer 2 at runtime) -- so this camera sees
+; the whole world normally but never renders your own character
+; model, which is what was causing you to see the inside of your own
+; head: the camera sits INSIDE the Body mesh (it has to, that's where
+; a first-person head is), so without this exclusion it renders that
+; mesh's own inner surface right in front of the lens.
 [node name="Camera3D" type="Camera3D" parent="Head"]
 current = true
 fov = 75.0
+cull_mask = 1048573
 
 ; RayCast3D is the player's "interaction sensor" -- a straight invisible
 ; line pointing wherever the camera looks, out to 3 meters

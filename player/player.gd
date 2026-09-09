@@ -81,6 +81,37 @@ func _ready() -> void:
 			"the character will stay in its default T-pose. Check that " +
 			"the animation library scene instanced correctly.")
 
+	# Hide the Body model from this player's own camera, and make sure
+	# it casts shadows. The camera sits inside Body's head/torso
+	# (that's just where a first-person camera has to live), so
+	# without the layer change you'd be staring at the backfaces of
+	# your own mannequin's geometry -- "the inside of my head".
+	# Camera3D.cull_mask in player.tscn is set to ignore render layer
+	# 2, so putting every mesh under Body on layer 2 makes them
+	# invisible to THIS camera while staying fully visible to any
+	# other camera (a mirror, a future third-person view, etc) --
+	# including the world's SunLight, whose shadow_enabled shadow pass
+	# isn't affected by cull_mask at all, so the model still throws a
+	# shadow onto the ground even though you can't see it directly.
+	_set_layer_recursive($Body, 2)
+
+
+func _set_layer_recursive(node: Node, layer_bit: int) -> void:
+	# Imported .glb scenes can nest meshes arbitrarily deep (under a
+	# Skeleton3D, inside sub-groups, etc.) and we don't want this to
+	# break if the mannequin model is ever swapped out, so we walk
+	# every descendant instead of hardcoding a path.
+	if node is VisualInstance3D:
+		node.layers = layer_bit
+		# Imported skinned meshes sometimes come through from glTF
+		# with shadow casting switched off (or set to "double sided"
+		# shadow modes that can look wrong), so force it on explicitly
+		# rather than trusting whatever the .glb import settings did.
+		if node is GeometryInstance3D:
+			node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	for child in node.get_children():
+		_set_layer_recursive(child, layer_bit)
+
 
 func _unhandled_input(event: InputEvent) -> void:
 	# While a UI panel (code entry, a readable note) has focus,
