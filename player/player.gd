@@ -34,10 +34,30 @@ var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 @onready var camera: Camera3D = $Head/Camera3D
 @onready var interact_ray: RayCast3D = $Head/Camera3D/InteractRay
 
+# The "Body" node (see player.tscn) is an instanced copy of the whole
+# animation library mini-scene, which brings its own AnimationPlayer
+# along with it, containing clips like "Idle_Loop", "Walk_Loop",
+# "Sprint_Loop", "Jump_Start", "Jump_Loop", "Jump_Land", etc. We
+# don't know its exact node path in advance (Godot names it based on
+# how the .glb was authored), so find_child() searches the whole
+# Body sub-tree for a node literally named "AnimationPlayer" instead
+# of hardcoding a path that could silently break if the import ever
+# changes. `true` = search recursively into grandchildren too,
+# `false` = don't require it to be an "owned" scene node.
+@onready var body_anim: AnimationPlayer = find_child("AnimationPlayer", true, false) as AnimationPlayer
+
 var _bob_time := 0.0
 var _camera_base_y: float          # the camera's normal resting height
 var _hud: Node = null              # reference to the HUD (found via group, see below)
 var _current_target: Node = null   # whatever interactable object we're currently looking at
+
+# --- Body animation state machine ---
+# Jumping needs to play three DIFFERENT clips in sequence (takeoff,
+# then an airborne loop, then landing) rather than just switching
+# instantly, so it gets its own small state machine instead of being
+# decided fresh every single frame like idle/walk/sprint are.
+enum BodyState { GROUNDED, JUMP_START, JUMP_LOOP, JUMP_LAND }
+var _body_state: BodyState = BodyState.GROUNDED
 
 
 func _ready() -> void:
@@ -55,6 +75,11 @@ func _ready() -> void:
 	# path like get_node("../HUD") that would break if we ever moved
 	# things around in the scene tree.
 	_hud = get_tree().get_first_node_in_group("hud")
+
+	if body_anim == null:
+		push_warning("Player: no AnimationPlayer found under Body -- " +
+			"the character will stay in its default T-pose. Check that " +
+			"the animation library scene instanced correctly.")
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -152,6 +177,7 @@ func _physics_process(delta: float) -> void:
 
 	_update_head_bob(delta)
 	_update_interaction()
+	_update_body_animation()
 
 
 func _update_head_bob(delta: float) -> void:
@@ -200,3 +226,76 @@ func _update_interaction() -> void:
 			_hud.show_prompt(_current_target.get_prompt())
 		else:
 			_hud.hide_prompt()
+
+
+## ------------------------------------------------------------
+##  BODY ANIMATION
+##  Decides which animation clip the visible character (Body, in
+##  player.tscn) should be playing right now, based on movement --
+##  idle standing still, walking, sprinting, or one of three jump
+##  clips in sequence. This runs every physics frame, but calling
+##  .play() on a clip that's ALREADY playing would restart it from
+##  frame zero over and over (looking like it never moves), so
+##  _play_body_anim() below only actually restarts a clip when it's
+##  genuinely different from whatever's already playing.
+## ------------------------------------------------------------
+func _update_body_animation() -> void:
+	if body_anim == null:
+		return  # no AnimationPlayer was found -- nothing to drive.
+
+	match _body_state:
+		BodyState.GROUNDED:
+			if not is_on_floor():
+				# Just left the ground (jumped, or walked off a ledge).
+				_body_state = BodyState.JUMP_START
+				_play_body_anim("Jump_Start")
+			else:
+				_play_grounded_anim()
+
+		BodyState.JUMP_START:
+			if is_on_floor():
+				# Left the ground and landed again before Jump_Start
+				# even finished (e.g. a tiny step) -- skip straight to
+				# the landing clip instead of waiting.
+				_body_state = BodyState.JUMP_LAND
+				_play_body_anim("Jump_Land")
+			elif not body_anim.is_playing():
+				# Takeoff clip finished naturally -- move on to the
+				# looping airborne clip for however long we're falling.
+				_body_state = BodyState.JUMP_LOOP
+				_play_body_anim("Jump_Loop")
+
+		BodyState.JUMP_LOOP:
+			if is_on_floor():
+				_body_state = BodyState.JUMP_LAND
+				_play_body_anim("Jump_Land")
+
+		BodyState.JUMP_LAND:
+			if not body_anim.is_playing():
+				# Landing clip finished -- back to normal ground rules.
+				_body_state = BodyState.GROUNDED
+
+
+func _play_grounded_anim() -> void:
+	var ground_speed := Vector2(velocity.x, velocity.z).length()
+
+	if ground_speed < 0.1:
+		_play_body_anim("Idle_Loop")
+	elif Input.is_physical_key_pressed(KEY_SHIFT):
+		_play_body_anim("Sprint_Loop")
+	else:
+		_play_body_anim("Walk_Loop")
+
+
+func _play_body_anim(anim_name: String) -> void:
+	if not body_anim.has_animation(anim_name):
+		# Clip name doesn't exist in the library (typo, or the library
+		# changed) -- warn once instead of silently doing nothing, and
+		# don't touch playback so we don't stop whatever WAS playing.
+		push_warning("Player: animation \"%s\" not found in the library." % anim_name)
+		return
+
+	if body_anim.current_animation == anim_name and body_anim.is_playing():
+		return  # already playing this exact clip -- don't restart it.
+
+	body_anim.play(anim_name)

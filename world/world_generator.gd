@@ -70,6 +70,15 @@ extends Node3D
 @export var lake_depth: float = 3.2
 @export var water_level: float = 0.05
 
+@export_group("Ocean")
+## A giant flat water plane surrounding the generated terrain, so
+## the valley reads as an island in the sea instead of ending in
+## empty space (or, previously, an empty Terrain3D's checkerboard
+## placeholder). Kept LOWER than water_level so it never fights with
+## the lake's own water disc for the same pixels.
+@export var ocean_level: float = 0
+@export var ocean_size: float = 4000.0
+
 @export_group("Ruined watchtower")
 @export var tower_pos: Vector2 = Vector2(34.0, -46.0)
 @export var tower_segments: int = 4
@@ -83,12 +92,16 @@ extends Node3D
 
 @export_group("Terrain source")
 ## Once you've added a Terrain3D node in the editor (sibling of this
-## node, named "Terrain3D") and sculpted it by hand, leave this ON --
-## get_height() below will read real heights straight off it, so the
-## lake/tower/vegetation placement always matches whatever you've
-## sculpted. Turn it OFF only if you want to go back to the old
-## fully-procedural noise-based ground with no Terrain3D node at all.
-@export var use_hand_placed_terrain: bool = true
+## node, named "Terrain3D") and sculpted it by hand, turn this ON --
+## get_height() below will then read real heights straight off it,
+## so the lake/tower/vegetation placement always matches whatever
+## you've sculpted. Leave it OFF (the default) to always use the
+## fully-procedural noise-based ground below, even if an empty/
+## unsculpted Terrain3D node happens to exist in the scene -- an
+## empty Terrain3D has no collision and no texture painted on it,
+## which is exactly the "falling through the floor, no color" bug
+## this default avoids.
+@export var use_hand_placed_terrain: bool = false
 
 var _terrain: Terrain3D = null
 
@@ -136,6 +149,7 @@ func _ready() -> void:
 	if _terrain == null:
 		_build_terrain()
 
+	_build_ocean()
 	_build_lake()
 	_build_tower()
 	_scatter_trees()
@@ -375,6 +389,60 @@ func _build_terrain_collision(row: int, half: float) -> void:
 	body.add_child(cs)
 
 	add_child(body)
+
+
+## ------------------------------------------------------------
+##  OCEAN
+##  One giant flat plane, positioned low and far enough down that it
+##  sits UNDER the generated terrain everywhere except right at the
+##  outer edges (and any low dips) -- from above, that reads as an
+##  island surrounded by sea, with cliffs/hills poking up out of the
+##  water. Same rippling-water shader as the lake below, just scaled
+##  up and recolored slightly deeper, so both waters visually match.
+## ------------------------------------------------------------
+func _build_ocean() -> void:
+	var mesh := PlaneMesh.new()
+	mesh.size = Vector2(ocean_size, ocean_size)
+
+	var shader := Shader.new()
+	shader.code = """
+shader_type spatial;
+render_mode blend_mix, cull_disabled, diffuse_burley, specular_schlick_ggx;
+
+uniform vec4 water_color : source_color = vec4(0.13, 0.36, 0.46, 0.88);
+uniform vec4 deep_color : source_color = vec4(0.02, 0.1, 0.18, 0.97);
+uniform float wave_speed = 0.5;
+uniform float wave_height = 0.1;
+uniform float wave_scale = 0.35;
+
+void vertex() {
+	vec3 world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	float wave = sin(world_pos.x * wave_scale + TIME * wave_speed)
+		* cos(world_pos.z * wave_scale * 0.8 + TIME * wave_speed * 0.7);
+	VERTEX.y += wave * wave_height;
+}
+
+void fragment() {
+	float fresnel = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
+	ALBEDO = mix(deep_color.rgb, water_color.rgb, fresnel);
+	ALPHA = mix(deep_color.a, water_color.a, fresnel);
+	ROUGHNESS = 0.05;
+	METALLIC = 0.25;
+	EMISSION = deep_color.rgb * 0.1;
+}
+"""
+
+	var mat := ShaderMaterial.new()
+	mat.shader = shader
+	mat.set_shader_parameter("water_color", Color(0.13, 0.36, 0.46, 0.88))
+	mat.set_shader_parameter("deep_color", Color(0.02, 0.1, 0.18, 0.97))
+
+	var mi := MeshInstance3D.new()
+	mi.name = "Ocean"
+	mi.mesh = mesh
+	mi.material_override = mat
+	mi.position = Vector3(0.0, ocean_level, 0.0)
+	add_child(mi)
 
 
 ## ------------------------------------------------------------

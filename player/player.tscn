@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://player/player.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://buqa37qo6nekt" path="res://Godot/AnimationLibrary_Godot_Standard.glb" id="2_body"]
 
 ; Collision shape -- invisible, this is what the physics engine actually
 ; uses to detect walls/floor/crates. It never gets a material/color.
@@ -8,26 +9,31 @@
 radius = 0.4
 height = 1.8
 
-; Visible shape -- same size as the collision shape above, but this is
-; what actually gets drawn on screen.
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
-radius = 0.4
-height = 1.8
-
-; A "material" tells a mesh what color/shininess/etc. to render with.
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_player"]
-albedo_color = Color(0.85, 0.85, 0.9, 1)
-roughness = 0.6
-
 [node name="Player" type="CharacterBody3D"]
 script = ExtResource("1_script")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("CapsuleShape3D_1")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-mesh = SubResource("CapsuleMesh_1")
-surface_material_override/0 = SubResource("StandardMaterial3D_player")
+; The old flat gray capsule MeshInstance3D used to go here as a
+; placeholder body. It's been replaced by "Body" below -- the
+; animated Mannequin character from the animation library, instanced
+; as its own mini-scene (it brings its own Skeleton3D and
+; AnimationPlayer with it, which player.gd finds and drives -- see
+; _update_body_animation() there). The CollisionShape3D above is
+; unchanged and still what physics actually uses; Body is purely
+; visual and never affects collision.
+;
+; Position.y = -0.9: the collision capsule above is 1.8m tall,
+; centered on the Player's own origin (spans -0.9 to +0.9), so its
+; bottom -- the ground -- sits at -0.9. The Mannequin rig's own feet
+; sit at ITS origin (y = 0), so moving Body down by 0.9 lines its
+; feet up with the capsule's bottom. If the body ever looks like
+; it's floating or sinking into the ground once you can see it in
+; the editor, nudge this Y value (or add a "scale" property here) to
+; match -- rigs can vary slightly in exact height.
+[node name="Body" parent="." instance=ExtResource("2_body")]
+position = Vector3(0, -0.9, 0)
 
 [node name="Head" type="Node3D" parent="."]
 position = Vector3(0, 0.6, 0)
